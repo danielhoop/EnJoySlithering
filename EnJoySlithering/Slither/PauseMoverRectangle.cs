@@ -1,6 +1,6 @@
 using ControllerToMouseMapper.Input;
 
-namespace Slither;
+namespace EnJoySlithering.Slither;
 
 public class PauseMoverRectangle
 {
@@ -66,9 +66,7 @@ public class PauseMoverRectangle
             CurrentSetting = (CurrentSetting + 1) % 4;
             LastDirectionChange = DateTime.Now;
         }
-        Mouse.SetPosition(
-            Screen.XCenter + DirectionSettings[CurrentSetting].X * Screen.Radius * Screen.XAdaption,
-            Screen.YCenter - DirectionSettings[CurrentSetting].Y * Screen.Radius);
+        Screen.SetMousePositionFromJoystickValue(DirectionSettings[CurrentSetting].X, DirectionSettings[CurrentSetting].Y);
     }
 }
 
@@ -76,9 +74,9 @@ class DirectionSetting
 {
     private double SecondsDiffOriginal;
     public double SecondsDiff { get; set; }
-    public double X { get; set; }
-    public double Y { get; set; }
-    public DirectionSetting(double secondsDiff, double x, double y)
+    public float X { get; set; }
+    public float Y { get; set; }
+    public DirectionSetting(double secondsDiff, float x, float y)
     {
         SecondsDiff = secondsDiff;
         SecondsDiffOriginal = secondsDiff;

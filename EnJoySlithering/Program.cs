@@ -5,7 +5,7 @@ using ControllerToMouseMapper.Input;
 using XInputium;
 using XInputium.ModifierFunctions;
 using XInputium.XInput;
-using Slither;
+using EnJoySlithering.Slither;
 using System.Configuration;
 
 // For this sample project, we are using our own simple implementation of mouse and
@@ -79,6 +79,7 @@ deviceManager.DeviceStateChanged += (_, e) =>
 
 float deadZone = 0.2f; // 0.2f Was the original value. Is this the value for a circular deadzone? Probably not.
 Screen screen = new();
+PauseMoverCircle pauseMover = new(screen);
 
 // Configure the joystick that controls the mouse.
 var mouseJoystick1 = gamepad.LeftJoystick;  // Joystick that controls the mouse.
@@ -87,7 +88,10 @@ mouseJoystick1.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick1.Updated += (_, _) =>
 {
-    screen.SetMousePositionFromJoystickValue(mouseJoystick1.X, mouseJoystick1.Y);
+    if (!pauseMover.IsPauseModeOn())
+    {
+        screen.SetMousePositionFromJoystickValue(mouseJoystick1.X, mouseJoystick1.Y);
+    }
 };
 
 
@@ -98,7 +102,10 @@ mouseJoystick2.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick2.Updated += (_, _) =>
 {
-    screen.SetMousePositionFromJoystickValue(mouseJoystick2.X, mouseJoystick2.Y);
+    if (!pauseMover.IsPauseModeOn())
+    {
+        screen.SetMousePositionFromJoystickValue(mouseJoystick2.X, mouseJoystick2.Y);
+    }
 };
 
 //foreach (var button in gamepad.Buttons) {
@@ -126,23 +133,28 @@ gamepad.Buttons.LB.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
 gamepad.Buttons.LS.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
 gamepad.Buttons.LS.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
 
-PauseMoverRectangle pauseMover = new(screen);
-
-gamepad.Buttons.Y.Pressed += (_, _) => {
-    if (pauseMover.IsPauseModeOn()) {
+gamepad.Buttons.Y.Pressed += (_, _) =>
+{
+    if (pauseMover.IsPauseModeOn())
+    {
         pauseMover.StopPauseMode();
         Console.WriteLine("Pause mode is off.");
-    } else {
+    }
+    else
+    {
         pauseMover.StartPauseMode();
         Console.WriteLine("Pause mode is on.");
     }
 };
 
 
-gamepad.Buttons.DPadUp.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.Escape);
-gamepad.Buttons.DPadDown.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.F11);
-gamepad.Buttons.DPadRight.Pressed += (_, _) => System.Environment.Exit(0);
-gamepad.Buttons.DPadLeft.Pressed += (_, _) => System.Environment.Exit(0);
+gamepad.Buttons.DPadUp.Pressed += (_, _) => pauseMover.DecreaseSpeed();
+gamepad.Buttons.DPadDown.Pressed += (_, _) => pauseMover.IncreaseSpeed();
+gamepad.Buttons.DPadRight.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.Escape);
+gamepad.Buttons.DPadLeft.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.F11);
+gamepad.Buttons.Start.Pressed += (_, _) => System.Environment.Exit(0);
+gamepad.Buttons.Back.Pressed += (_, _) => System.Environment.Exit(0);
+
 
 // Map controller buttons to keyboard keys.
 // For these buttons (which map to keyboard keys), we would like them to repeat

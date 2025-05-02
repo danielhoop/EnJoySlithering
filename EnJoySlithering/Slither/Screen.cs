@@ -1,6 +1,6 @@
 using ControllerToMouseMapper.Input;
 
-namespace Slither;
+namespace EnJoySlithering.Slither;
 
 public class Screen
 {
