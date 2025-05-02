@@ -78,23 +78,7 @@ deviceManager.DeviceStateChanged += (_, e) =>
 // # CONFIGURE GAMEPAD AND SUBSCRIBE TO INPUT EVENTS
 
 float deadZone = 0.2f; // 0.2f Was the original value. Is this the value for a circular deadzone? Probably not.
-double radius = 65536/4;
-double xCenter = 65536/2;
-double yCenter = 65536/2;
-/*
-double radius = 1/4;
-double xCenter = 1/2;
-double yCenter = 1/2;
-*/
-
-double screenWidth = 1920;
-double screenHeight = 1200;
-var primaryScreen = System.Windows.Forms.Screen.PrimaryScreen;
-if (primaryScreen != null ) {
-    screenWidth = primaryScreen.Bounds.Width;
-    screenHeight = primaryScreen.Bounds.Height;
-}
-double xAdaption = screenHeight/screenWidth;
+Screen screen = new();
 
 // Configure the joystick that controls the mouse.
 var mouseJoystick1 = gamepad.LeftJoystick;  // Joystick that controls the mouse.
@@ -103,12 +87,7 @@ mouseJoystick1.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick1.Updated += (_, _) =>
 {
-    // Console.WriteLine(mouseJoystick.X); Console.WriteLine(mouseJoystick.Y);
-    if (mouseJoystick1.X != 0 || mouseJoystick1.Y != 0) {
-        Mouse.SetPosition(
-            xCenter + mouseJoystick1.X * radius * xAdaption,
-            yCenter - mouseJoystick1.Y * radius);
-    }
+    screen.SetMousePositionFromJoystickValue(mouseJoystick1.X, mouseJoystick1.Y);
 };
 
 
@@ -119,12 +98,7 @@ mouseJoystick2.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick2.Updated += (_, _) =>
 {
-    // Console.WriteLine(mouseJoystick.X); Console.WriteLine(mouseJoystick.Y);
-    if (mouseJoystick2.X != 0 || mouseJoystick2.Y != 0) {
-        Mouse.SetPosition(
-            xCenter + mouseJoystick2.X * radius * xAdaption,
-            yCenter - mouseJoystick2.Y * radius);
-    }
+    screen.SetMousePositionFromJoystickValue(mouseJoystick2.X, mouseJoystick2.Y);
 };
 
 //foreach (var button in gamepad.Buttons) {
@@ -152,29 +126,14 @@ gamepad.Buttons.LB.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
 gamepad.Buttons.LS.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
 gamepad.Buttons.LS.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
 
-double xReductionFactorEachRound = 0.9;
-double minSecondsDiff = 1.1;
-DirectionSetting[] directionSettings = [
-    new DirectionSetting(6.0,             1,  0), // for X seconds, go right
-    new DirectionSetting(minSecondsDiff,  0, -1), // for X seconds, go down
-    new DirectionSetting(6.0,            -1,  0), // for X seconds, go left
-    new DirectionSetting(minSecondsDiff,  0,  1), // for X seconds, go up
-];
-var currentSetting = 0;
-var lastDirectionChange = DateTime.Now; // Will be overwritten when button is pressed.
-var pauseModeOn = false;
+PauseMoverRectangle pauseMover = new(screen);
 
 gamepad.Buttons.Y.Pressed += (_, _) => {
-    if (pauseModeOn) {
-        pauseModeOn = false;
+    if (pauseMover.IsPauseModeOn()) {
+        pauseMover.StopPauseMode();
         Console.WriteLine("Pause mode is off.");
     } else {
-        pauseModeOn = true;
-        currentSetting = 0;
-        lastDirectionChange = DateTime.Now;
-        foreach(var setting in directionSettings) {
-            setting.resetValues();
-        }
+        pauseMover.StartPauseMode();
         Console.WriteLine("Pause mode is on.");
     }
 };
@@ -214,30 +173,7 @@ using InputLoop inputLoop = new(time =>
     // a device from the device manager.
     deviceManager.Update();  // All input events will fire here.
 
-    if (pauseModeOn) {
-        double secondsDiff = (DateTime.Now - lastDirectionChange).TotalSeconds;
-        if (secondsDiff > directionSettings[currentSetting].SecondsDiff) {
-             // When we're in the last setting, then we have to run a little less int he X direction because the tail of the snake will make a smaller curve.
-             // Otherwise we would be vulnerable and could be caught by other snakes.
-             if (directionSettings[currentSetting].Y != 0) {
-             //if (currentSetting == directionSettings.Length - 1) {
-                foreach(var setting in directionSettings) {
-                    if (setting.X != 0) {
-                        setting.SecondsDiff *= xReductionFactorEachRound;
-                        if (setting.SecondsDiff < minSecondsDiff) {
-                            setting.SecondsDiff = minSecondsDiff;
-                        }
-                    }
-                }
-            }
-            currentSetting = (currentSetting + 1) % 4;
-            lastDirectionChange = DateTime.Now;
-        }
-        Mouse.SetPosition(
-            xCenter + directionSettings[currentSetting].X * radius * xAdaption,
-            yCenter - directionSettings[currentSetting].Y * radius);
-    }
-
+    pauseMover.AdaptMousePosition();
     Thread.Sleep(1);
 });
 inputLoop.Start();  // Start our input loop, to listen for input events.
