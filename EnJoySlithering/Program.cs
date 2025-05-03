@@ -46,19 +46,25 @@ Console.WriteLine("--------------------------------------------------------");
 Console.WriteLine();
 Console.WriteLine("- Left joystick:  move mouse");
 Console.WriteLine("- Right joystick: move mouse");
-Console.WriteLine("- Buttons ABXRL:   boost");
-Console.WriteLine("- Button Y:       toggle the pause mode");
-Console.WriteLine("- D pad up:       escape button");
-Console.WriteLine("- D pad down:     F11 button (toggle full screen mode)");
-Console.WriteLine("- D pad left:     exit this programm / controller mode");
-Console.WriteLine("- D pad right:    exit this programm / controller mode");
+Console.WriteLine("- Buttons ABXRL:  boost");
+Console.WriteLine("- Button Y:       toggle circle mode");
+Console.WriteLine("  - D pad up:       increase circle size");
+Console.WriteLine("  - D pad down:     decrease circle size");
+Console.WriteLine("  - D pad right:    set circle direction clockwise");
+Console.WriteLine("  - D pad left:     set circle direction counterclockwise");
+Console.WriteLine("- Start:          F11");
+Console.WriteLine("- Back:           turn left and/or right joystick on/off");
+Console.WriteLine("  - 1x:           turn right off");
+Console.WriteLine("  - 2x:           turn left off");
+Console.WriteLine("  - 3x:           turn both joysticks off");
+Console.WriteLine("  - 4x:           turn both joysticks on");
 Console.WriteLine();
 Console.WriteLine("--------------------------------------------------------");
 Console.WriteLine("Author:  Daniel Hoop");
 Console.WriteLine("         https://github.com/danielhoop");
 Console.WriteLine("Credits: Aderito Silva");
 Console.WriteLine("         https://github.com/AderitoSilva/XInputium");
-Console.WriteLine("Icon:    Snake icons created by Freepik - Flaticon");
+Console.WriteLine("Icon:    Snake icon created by Freepik - Flaticon");
 Console.WriteLine("--------------------------------------------------------");
 
 
@@ -79,7 +85,10 @@ deviceManager.DeviceStateChanged += (_, e) =>
 
 float deadZone = 0.2f; // 0.2f Was the original value. Is this the value for a circular deadzone? Probably not.
 Screen screen = new();
-PauseMoverCircle pauseMover = new(screen);
+PauseMoverCircle pauseMover = new(screen, gamepad);
+JoystickSwitch jsControl = new();
+double leftTriggerLastValue = 0;
+double rightTriggerLastValue = 0;
 
 // Configure the joystick that controls the mouse.
 var mouseJoystick1 = gamepad.LeftJoystick;  // Joystick that controls the mouse.
@@ -88,9 +97,44 @@ mouseJoystick1.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick1.Updated += (_, _) =>
 {
-    if (!pauseMover.IsPauseModeOn())
+    if (!pauseMover.IsPauseModeOn() && jsControl.IsLeftJoystickTurnedOn())
     {
         screen.SetMousePositionFromJoystickValue(mouseJoystick1.X, mouseJoystick1.Y);
+    }
+
+    // Boost using the triggers (left)
+    if (gamepad.LeftTrigger.RawValue == 1)
+    {
+        if (leftTriggerLastValue != 1)
+        {
+            leftTriggerLastValue = 1;
+            Mouse.PressButton(MouseButton.Left);
+        }
+    }
+    else
+    {
+        if (leftTriggerLastValue == 1)
+        {
+            leftTriggerLastValue = 0;
+            Mouse.ReleaseButton(MouseButton.Left);
+        }
+    }
+    // Boost using the triggers (right)
+    if (gamepad.RightTrigger.RawValue == 1)
+    {
+        if (rightTriggerLastValue != 1)
+        {
+            rightTriggerLastValue = 1;
+            Mouse.PressButton(MouseButton.Left);
+        }
+    }
+    else
+    {
+        if (rightTriggerLastValue == 1)
+        {
+            rightTriggerLastValue = 0;
+            Mouse.ReleaseButton(MouseButton.Left);
+        }
     }
 };
 
@@ -102,7 +146,7 @@ mouseJoystick2.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // 
 // Map the joystick to the mouse.
 mouseJoystick2.Updated += (_, _) =>
 {
-    if (!pauseMover.IsPauseModeOn())
+    if (!pauseMover.IsPauseModeOn() && jsControl.IsRightJoystickTurnedOn())
     {
         screen.SetMousePositionFromJoystickValue(mouseJoystick2.X, mouseJoystick2.Y);
     }
@@ -138,22 +182,20 @@ gamepad.Buttons.Y.Pressed += (_, _) =>
     if (pauseMover.IsPauseModeOn())
     {
         pauseMover.StopPauseMode();
-        Console.WriteLine("Pause mode is off.");
     }
     else
     {
         pauseMover.StartPauseMode();
-        Console.WriteLine("Pause mode is on.");
     }
 };
 
 
 gamepad.Buttons.DPadUp.Pressed += (_, _) => pauseMover.DecreaseSpeed();
 gamepad.Buttons.DPadDown.Pressed += (_, _) => pauseMover.IncreaseSpeed();
-gamepad.Buttons.DPadRight.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.Escape);
-gamepad.Buttons.DPadLeft.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.F11);
-gamepad.Buttons.Start.Pressed += (_, _) => System.Environment.Exit(0);
-gamepad.Buttons.Back.Pressed += (_, _) => System.Environment.Exit(0);
+gamepad.Buttons.DPadRight.Pressed += (_, _) => pauseMover.SetDirectionClockwise();
+gamepad.Buttons.DPadLeft.Pressed += (_, _) => pauseMover.SetDirectionAntiClockwise();
+gamepad.Buttons.Start.Pressed += (_, _) => Keyboard.TapKey(KeyboardVirtualKey.F11);
+gamepad.Buttons.Back.Pressed += (_, _) => jsControl.Press(); // System.Environment.Exit(0);
 
 
 // Map controller buttons to keyboard keys.
@@ -185,9 +227,13 @@ using InputLoop inputLoop = new(time =>
     // a device from the device manager.
     deviceManager.Update();  // All input events will fire here.
 
+    // Call the pause mode mover method to adapt the mouse position: circling
     pauseMover.AdaptMousePosition();
-    Thread.Sleep(1);
-});
+
+    // The frequency of the input loop is 60 iterations per second
+    // Attention: If you change this, the behaviour of the pauseMover may change,
+    // i.e., the circle size and adaption speed may change.
+}, 60);
 inputLoop.Start();  // Start our input loop, to listen for input events.
 
 
