@@ -12,10 +12,9 @@ public class PauseMoverCircle
     // the setting below will lead to an update each second frame.
     private readonly double MsMaxBeforeNextStep = 20;
     private double Alpha = 0; // Winkel Alpha im Rechtwinkligen Kreis-Dreieck
-    private double AlphaIncrPerStepOriginal = 0.005;
+    private double AlphaIncrPerStepOriginal = 0.01;
     private double AlphaDirectionMultiplier = 1;
     private double AlphaIncrPerStep;
-    private readonly double AlphaAcceleratorFactor = 1.0007; // Was 1.001
     private float X = 0f;
     private float Y = 0f;
     private DateTime LastDirectionChange = DateTime.Now; // Will be overwritten when button is pressed.
@@ -53,10 +52,20 @@ public class PauseMoverCircle
         double msDiff = (DateTime.Now - LastDirectionChange).TotalMilliseconds;
         if (msDiff > MsMaxBeforeNextStep)
         {
-            // It is only allowed to go manually bwyond the speed of 0.044
+            // It is only allowed to go manually beyond the speed of 0.044, but not automatically
             if (AlphaIncrPerStep < 0.044)
             {
-                AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * AlphaAcceleratorFactor);
+                // The line below works well for different sizes.
+                // The factor 0.1609 has to be changed if the speed adaption is done more than 30 times per second.
+                // It was determined from the following two data points:
+                //  * AlphaIncrPerStep = 0.02358,  8.9 secs for a full circle -> n = 8.9*30 -> 0.1588 = x = 1 / (n * AlphaIncrPerStep)
+                //  * AlphaIncrPerStep = 0.031384, 6.6 secs for a full circle -> n = 6.6*30 -> 0.1609 = x = 1 / (n * AlphaIncrPerStep)
+                // For 60 fps, x (i.e., 0.1609) probably has to be doubled.
+                AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * Math.Pow(1/0.82, AlphaIncrPerStep * 0.1609));
+                
+                // This line was ok only for a certain size.
+                // double AlphaAcceleratorFactor = 1.0007; // Was 1.001
+                // AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * AlphaAcceleratorFactor);
             }
             LastDirectionChange = DateTime.Now;
             Alpha -= AlphaIncrPerStep * AlphaDirectionMultiplier;
@@ -117,14 +126,22 @@ public class PauseMoverCircle
     }
     public void IncreaseSpeed()
     {
-        AlphaIncrPerStep *= 1.1;
-        AlphaIncrPerStepOriginal = AlphaIncrPerStep;
+        if (PauseModeOn) {
+            AlphaIncrPerStep *= 1.1;
+            AlphaIncrPerStepOriginal = AlphaIncrPerStep;
+        } else {
+            AlphaIncrPerStepOriginal *= 1.1;
+        }
         // Console.WriteLine("Speed is now: " + AlphaIncrPerStep);
     }
     public void DecreaseSpeed()
     {
-        AlphaIncrPerStep /= 1.1;
-        AlphaIncrPerStepOriginal = AlphaIncrPerStep;
+        if (PauseModeOn) {
+            AlphaIncrPerStep /= 1.1;
+            AlphaIncrPerStepOriginal = AlphaIncrPerStep;
+        } else {
+            AlphaIncrPerStepOriginal /= 1.1;
+        }
         // Console.WriteLine("Speed is now: " + AlphaIncrPerStep);
     }
     public void SetDirectionClockwise()
