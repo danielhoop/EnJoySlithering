@@ -22,50 +22,53 @@ using System.Configuration;
 
 // Show some initial text in the console.
 Console.WriteLine();
-Console.WriteLine("         /^\\/^\\ ");
-Console.WriteLine("       _|__|  O| ");
-Console.WriteLine("\\/     /~     \\_/ \\ ");
-Console.WriteLine(" \\____|__________/  \\ ");
-Console.WriteLine("        \\_______      \\ ");
-Console.WriteLine("                `\\     \\                 \\ ");
-Console.WriteLine("                  |     |                  \\ ");
-Console.WriteLine("                 /      /                    \\ ");
-Console.WriteLine("                /     /        Enjoy          \\ ");
-Console.WriteLine("              /      /      slithering!        \\ \\ ");
-Console.WriteLine("             /     /                            \\  \\ ");
-Console.WriteLine("           /     /             _----_            \\   \\ ");
-Console.WriteLine("          /     /           _-~      ~-_         |   | ");
-Console.WriteLine("         (      (        _-~    _--_    ~-_     _/   | ");
-Console.WriteLine("          \\      ~-____-~    _-~    ~-_    ~-_-~    / ");
-Console.WriteLine("            ~-_           _-~          ~-_       _-~ ");
-Console.WriteLine("               ~--______-~                ~-___-~ ");
+Console.WriteLine("           /^\\/^\\ ");
+Console.WriteLine("         _|__|  O| ");
+Console.WriteLine("  \\/     /~     \\_/ \\ ");
+Console.WriteLine("   \\____|__________/  \\ ");
+Console.WriteLine("          \\_______      \\ ");
+Console.WriteLine("                  `\\     \\                 \\ ");
+Console.WriteLine("                    |     |                  \\ ");
+Console.WriteLine("                   /      /                    \\ ");
+Console.WriteLine("                  /     /        En Joy         \\ ");
+Console.WriteLine("                /      /      slithering!        \\ \\ ");
+Console.WriteLine("               /     /                            \\  \\ ");
+Console.WriteLine("             /     /             _----_            \\   \\ ");
+Console.WriteLine("            /     /           _-~      ~-_         |   | ");
+Console.WriteLine("           (      (        _-~    _--_    ~-_     _/   | ");
+Console.WriteLine("            \\      ~-____-~    _-~    ~-_    ~-_-~    / ");
+Console.WriteLine("              ~-_           _-~          ~-_       _-~ ");
+Console.WriteLine("                 ~--______-~                ~-___-~ ");
 Console.WriteLine();
-Console.WriteLine("--------------------------------------------------------");
-Console.WriteLine("----------------------- Controls -----------------------");
-Console.WriteLine("--------------------------------------------------------");
+Console.WriteLine("------------------------------------------------------------");
+Console.WriteLine("------------------------- Controls -------------------------");
+Console.WriteLine("------------------------------------------------------------");
 Console.WriteLine();
-Console.WriteLine("- Left joystick:  move mouse");
-Console.WriteLine("- Right joystick: move mouse");
-Console.WriteLine("- Buttons ABXRL:  boost");
-Console.WriteLine("- Button Y:       toggle circle mode");
-Console.WriteLine("  - D pad up:       increase circle size");
-Console.WriteLine("  - D pad down:     decrease circle size");
-Console.WriteLine("  - D pad right:    set circle direction clockwise");
-Console.WriteLine("  - D pad left:     set circle direction counterclockwise");
-Console.WriteLine("- Start:          F11");
-Console.WriteLine("- Back:           turn left and/or right joystick on/off");
-Console.WriteLine("  - 1x:           turn right off");
-Console.WriteLine("  - 2x:           turn left off");
-Console.WriteLine("  - 3x:           turn both joysticks off");
-Console.WriteLine("  - 4x:           turn both joysticks on");
+Console.WriteLine("- Left joystick:  Move mouse");
+Console.WriteLine("- Right joystick: Move mouse");
+Console.WriteLine("- Buttons ABXRL:  Boost");
+Console.WriteLine("- Button Y:       Toggle circle mode");
+Console.WriteLine("  - D pad up:       Increase circle size");
+Console.WriteLine("                    The initial slither length to circle");
+Console.WriteLine("                    is set to 500. It can be increased ");
+Console.WriteLine("                    by steps of 500 to 1000, 1500, 2000, etc.");
+Console.WriteLine("  - D pad down:     Decrease circle size");
+Console.WriteLine("  - D pad right:    Set circle direction clockwise");
+Console.WriteLine("  - D pad left:     Set circle direction counterclockwise");
+Console.WriteLine("- Start:          F11 (toggle full screen mode)");
+Console.WriteLine("- Back:");
+Console.WriteLine("  - 1x:           Turn right joystick off");
+Console.WriteLine("  - 2x:           Turn left joystick off");
+Console.WriteLine("  - 3x:           Turn both joysticks off");
+Console.WriteLine("  - 4x:           Turn both joysticks on");
 Console.WriteLine();
-Console.WriteLine("--------------------------------------------------------");
+Console.WriteLine("------------------------------------------------------------");
 Console.WriteLine("Author:  Daniel Hoop");
 Console.WriteLine("         https://github.com/danielhoop");
 Console.WriteLine("Credits: Aderito Silva");
 Console.WriteLine("         https://github.com/AderitoSilva/XInputium");
 Console.WriteLine("Icon:    Snake icon created by Freepik - Flaticon");
-Console.WriteLine("--------------------------------------------------------");
+Console.WriteLine("------------------------------------------------------------");
 
 
 // # SET UP THE INSTANCES THAT WILL DO ALL THE INPUT RELATED WORK
@@ -108,7 +111,7 @@ mouseJoystick1.Updated += (_, _) =>
         if (leftTriggerLastValue != 1)
         {
             leftTriggerLastValue = 1;
-            Mouse.PressButton(MouseButton.Left);
+            Screen.Boost();
         }
     }
     else
@@ -116,7 +119,7 @@ mouseJoystick1.Updated += (_, _) =>
         if (leftTriggerLastValue == 1)
         {
             leftTriggerLastValue = 0;
-            Mouse.ReleaseButton(MouseButton.Left);
+            Screen.StopBoosting();
         }
     }
     // Boost using the triggers (right)
@@ -125,7 +128,7 @@ mouseJoystick1.Updated += (_, _) =>
         if (rightTriggerLastValue != 1)
         {
             rightTriggerLastValue = 1;
-            Mouse.PressButton(MouseButton.Left);
+            Screen.Boost();
         }
     }
     else
@@ -133,7 +136,7 @@ mouseJoystick1.Updated += (_, _) =>
         if (rightTriggerLastValue == 1)
         {
             rightTriggerLastValue = 0;
-            Mouse.ReleaseButton(MouseButton.Left);
+            Screen.StopBoosting();
         }
     }
 };
@@ -153,29 +156,29 @@ mouseJoystick2.Updated += (_, _) =>
 };
 
 //foreach (var button in gamepad.Buttons) {
-//    button.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
+//    button.Pressed += (_, _) => Screen.Boost();
 //}
 
-gamepad.Buttons.A.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.A.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.A.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.A.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.B.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.B.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.B.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.B.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.X.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.X.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.X.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.X.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.RB.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.RB.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.RB.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.RB.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.RS.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.RS.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.RS.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.RS.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.LB.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.LB.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.LB.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.LB.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.LS.Pressed += (_, _) => Mouse.PressButton(MouseButton.Left);
-gamepad.Buttons.LS.Released += (_, _) => Mouse.ReleaseButton(MouseButton.Left);
+gamepad.Buttons.LS.Pressed += (_, _) => Screen.Boost();
+gamepad.Buttons.LS.Released += (_, _) => Screen.StopBoosting();
 
 gamepad.Buttons.Y.Pressed += (_, _) =>
 {

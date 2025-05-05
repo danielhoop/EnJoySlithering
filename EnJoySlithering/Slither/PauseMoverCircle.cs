@@ -176,7 +176,8 @@ public class PauseMoverCircle
 
         // Because this formula was calculated without making the circle continuously smaller,
         // We can increase the size a little bit by decreasing the speed.
-        return alphaIncr * 0.95;
+        // In larger snake lengths above 7500, this will lead to sizes that will become a little bit too large.
+        return alphaIncr * 0.9625;
     }
     public void SetDirectionClockwise()
     {

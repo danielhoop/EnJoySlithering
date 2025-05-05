@@ -60,8 +60,12 @@ public class Screen
         EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref devMode);
         ScreenWidth = (double)devMode.dmPelsWidth;
         ScreenHeight = (double)devMode.dmPelsHeight;
-        Console.WriteLine("Detected screen width:  {0}", ScreenWidth);
-        Console.WriteLine("Detected screen height: {0}", ScreenHeight);
+        Console.WriteLine("Detected screen width:  {0} px", ScreenWidth);
+        Console.WriteLine("Detected screen height: {0} px", ScreenHeight);
+        Console.WriteLine("If the detected resolution is not correct, or the circle");
+        Console.WriteLine("is not in the middle of the screen, try to play on the");
+        Console.WriteLine("screen with number 1, or disconnect all screens but one");
+        Console.WriteLine("to play slither.io");
 
         if (ScreenWidth == 0)
             ScreenWidth = 1920;
@@ -78,5 +82,14 @@ public class Screen
         Mouse.SetPosition(
             XCenter + x * Radius * XAdaption,
             YCenter - y * Radius);
+    }
+
+    public static void Boost() {
+        Mouse.PressButton(MouseButton.Left);
+        Keyboard.PressKey(KeyboardVirtualKey.SpaceBar);
+    }
+    public static void StopBoosting() {
+        Mouse.ReleaseButton(MouseButton.Left);
+        Keyboard.ReleaseKey(KeyboardVirtualKey.SpaceBar);
     }
 }
