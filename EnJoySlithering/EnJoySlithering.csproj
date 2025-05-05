@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="XInputium" Version="*" />
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
   </ItemGroup>
 
 </Project>
