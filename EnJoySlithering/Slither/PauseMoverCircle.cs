@@ -12,12 +12,14 @@ public class PauseMoverCircle
     // the setting below will lead to an update each second frame.
     private readonly double MsMaxBeforeNextStep = 20;
     private double Alpha = 0; // Winkel Alpha im Rechtwinkligen Kreis-Dreieck
-    private double AlphaIncrPerStepOriginal = 0.01;
+    private double TargetSpeedLength = 500;
+    private double AlphaIncrPerStepOriginal;
     private double AlphaDirectionMultiplier = 1;
     private double AlphaIncrPerStep;
     private float X = 0f;
     private float Y = 0f;
     private DateTime LastDirectionChange = DateTime.Now; // Will be overwritten when button is pressed.
+
 
     public PauseMoverCircle(Screen screen, XGamepad gamepad)
     {
@@ -35,6 +37,7 @@ public class PauseMoverCircle
         CalcNewXY();
         //Console.WriteLine("Alpha is: " + Alpha + "\nX is: " + Gamepad.LeftJoystick.X + "\nY is: " + Gamepad.LeftJoystick.Y);
         LastDirectionChange = DateTime.Now;
+        AlphaIncrPerStepOriginal = CalcAlphaIncrForTargetLength(TargetSpeedLength);
         AlphaIncrPerStep = AlphaIncrPerStepOriginal;
     }
     public bool IsPauseModeOn()
@@ -44,6 +47,8 @@ public class PauseMoverCircle
     public void StopPauseMode()
     {
         PauseModeOn = false;
+        // This has to be done so that the increase/decrease of speed in the respective functions can be done without an if/else statement.
+        AlphaIncrPerStep = AlphaIncrPerStepOriginal;
     }
     public void AdaptMousePosition()
     {
@@ -61,12 +66,13 @@ public class PauseMoverCircle
                 //  * AlphaIncrPerStep = 0.02358,  8.9 secs for a full circle -> n = 8.9*30 -> 0.1588 = x = 1 / (n * AlphaIncrPerStep)
                 //  * AlphaIncrPerStep = 0.031384, 6.6 secs for a full circle -> n = 6.6*30 -> 0.1609 = x = 1 / (n * AlphaIncrPerStep)
                 // For 60 fps, x (i.e., 0.1609) probably has to be doubled.
-                AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * Math.Pow(1/0.82, AlphaIncrPerStep * 0.1609));
-                
+                AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * Math.Pow(1 / 0.82, AlphaIncrPerStep * 0.1609));
+
                 // This line was ok only for a certain size.
                 // double AlphaAcceleratorFactor = 1.0007; // Was 1.001
                 // AlphaIncrPerStep = Math.Min(0.044, AlphaIncrPerStep * AlphaAcceleratorFactor);
             }
+            //Console.WriteLine("AlphaIncrPerStep: {0}", AlphaIncrPerStep);
             LastDirectionChange = DateTime.Now;
             Alpha -= AlphaIncrPerStep * AlphaDirectionMultiplier;
             CalcNewXY();
@@ -126,23 +132,51 @@ public class PauseMoverCircle
     }
     public void IncreaseSpeed()
     {
-        if (PauseModeOn) {
-            AlphaIncrPerStep *= 1.1;
+        if (PauseModeOn)
+        {
+            AlphaIncrPerStep *= 1.075;
             AlphaIncrPerStepOriginal = AlphaIncrPerStep;
-        } else {
-            AlphaIncrPerStepOriginal *= 1.1;
         }
-        // Console.WriteLine("Speed is now: " + AlphaIncrPerStep);
+        else
+        {
+            TargetSpeedLength = Math.Max(TargetSpeedLength - 500, 500);
+            AlphaIncrPerStepOriginal = CalcAlphaIncrForTargetLength(TargetSpeedLength);
+        }
+        //Console.WriteLine("Speed is now: " + AlphaIncrPerStepOriginal);
+        //Console.WriteLine("TargetSpeedLength: " + TargetSpeedLength);
     }
     public void DecreaseSpeed()
     {
-        if (PauseModeOn) {
-            AlphaIncrPerStep /= 1.1;
+        if (PauseModeOn)
+        {
+            AlphaIncrPerStep /= 1.075;
             AlphaIncrPerStepOriginal = AlphaIncrPerStep;
-        } else {
-            AlphaIncrPerStepOriginal /= 1.1;
         }
-        // Console.WriteLine("Speed is now: " + AlphaIncrPerStep);
+        else
+        {
+            TargetSpeedLength += 500;
+            AlphaIncrPerStepOriginal = CalcAlphaIncrForTargetLength(TargetSpeedLength);
+        }
+    }
+    public static double CalcAlphaIncrForTargetLength(double len)
+    {
+        // From these measurements:
+        // Length -> Optimal AlphaIncrPerStep
+        //  500 -> 0.03797498
+        // 1007 -> 0.025357206952925777
+        // 1522 -> 0.01898749
+        // 2067 -> 0.01528418076395789
+        // 2533 -> 0.014217842571123619
+        // 3868 -> 0.010646328049534463
+        // 4618 -> 0.009903560976311128
+        // 5200 -> 0.009212614861684771
+
+        // This formula results: 
+        double alphaIncr = 1.6931 * Math.Pow(len, -0.612);
+
+        // Because this formula was calculated without making the circle continuously smaller,
+        // We can increase the size a little bit by decreasing the speed.
+        return alphaIncr * 0.95;
     }
     public void SetDirectionClockwise()
     {
