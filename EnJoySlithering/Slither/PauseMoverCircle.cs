@@ -77,7 +77,7 @@ public class PauseMoverCircle
             Alpha -= AlphaIncrPerStep * AlphaDirectionMultiplier;
             CalcNewXY();
         }
-        Screen.SetMousePositionFromJoystickValue(X, Y);
+        Screen.SetMousePositionFromJoystickValue(X, Y, JoystickType.LEFT);
     }
     private void CalcNewXY()
     {

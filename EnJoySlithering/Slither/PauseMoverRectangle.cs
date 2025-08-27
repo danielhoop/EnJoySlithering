@@ -66,7 +66,7 @@ public class PauseMoverRectangle
             CurrentSetting = (CurrentSetting + 1) % 4;
             LastDirectionChange = DateTime.Now;
         }
-        Screen.SetMousePositionFromJoystickValue(DirectionSettings[CurrentSetting].X, DirectionSettings[CurrentSetting].Y);
+        Screen.SetMousePositionFromJoystickValue(DirectionSettings[CurrentSetting].X, DirectionSettings[CurrentSetting].Y, JoystickType.LEFT);
     }
 }
 

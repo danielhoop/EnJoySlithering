@@ -31,7 +31,7 @@ Console.WriteLine("                  `\\     \\                 \\ ");
 Console.WriteLine("                    |     |                  \\ ");
 Console.WriteLine("                   /      /                    \\ ");
 Console.WriteLine("                  /     /        En Joy         \\ ");
-Console.WriteLine("                /      /      slithering!        \\ \\ ");
+Console.WriteLine("                /      /      Slithering!        \\ \\ ");
 Console.WriteLine("               /     /                            \\  \\ ");
 Console.WriteLine("             /     /             _----_            \\   \\ ");
 Console.WriteLine("            /     /           _-~      ~-_         |   | ");
@@ -94,15 +94,15 @@ double leftTriggerLastValue = 0;
 double rightTriggerLastValue = 0;
 
 // Configure the joystick that controls the mouse.
-var mouseJoystick1 = gamepad.LeftJoystick;  // Joystick that controls the mouse.
-mouseJoystick1.InnerDeadZone = deadZone;  // Let's use a circular dead zone.
-mouseJoystick1.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make the joystick more precise near the center.
+var joystickL = gamepad.LeftJoystick;  // Joystick that controls the mouse.
+joystickL.InnerDeadZone = deadZone;  // Let's use a circular dead zone.
+joystickL.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make the joystick more precise near the center.
 // Map the joystick to the mouse.
-mouseJoystick1.Updated += (_, _) =>
+joystickL.Updated += (_, _) =>
 {
     if (!pauseMover.IsPauseModeOn() && jsControl.IsLeftJoystickTurnedOn())
     {
-        screen.SetMousePositionFromJoystickValue(mouseJoystick1.X, mouseJoystick1.Y);
+        screen.SetMousePositionFromJoystickValue(joystickL.X, joystickL.Y, JoystickType.LEFT);
     }
 
     // Boost using the triggers (left)
@@ -143,21 +143,17 @@ mouseJoystick1.Updated += (_, _) =>
 
 
 // Configure the joystick that controls the mouse.
-var mouseJoystick2 = gamepad.RightJoystick;  // Joystick that controls the mouse.
-mouseJoystick2.InnerDeadZone = deadZone;  // Let's use a circular dead zone.
-mouseJoystick2.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make the joystick more precise near the center.
+var joystickR = gamepad.RightJoystick;  // Joystick that controls the mouse.
+joystickR.InnerDeadZone = deadZone;  // Let's use a circular dead zone.
+joystickR.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make the joystick more precise near the center.
 // Map the joystick to the mouse.
-mouseJoystick2.Updated += (_, _) =>
+joystickR.Updated += (_, _) =>
 {
     if (!pauseMover.IsPauseModeOn() && jsControl.IsRightJoystickTurnedOn())
     {
-        screen.SetMousePositionFromJoystickValue(mouseJoystick2.X, mouseJoystick2.Y);
+        screen.SetMousePositionFromJoystickValue(joystickR.X, joystickR.Y, JoystickType.RIGHT);
     }
 };
-
-//foreach (var button in gamepad.Buttons) {
-//    button.Pressed += (_, _) => Screen.Boost();
-//}
 
 gamepad.Buttons.A.Pressed += (_, _) => Screen.Boost();
 gamepad.Buttons.A.Released += (_, _) => Screen.StopBoosting();
@@ -170,15 +166,34 @@ gamepad.Buttons.X.Released += (_, _) => Screen.StopBoosting();
 
 gamepad.Buttons.RB.Pressed += (_, _) => Screen.Boost();
 gamepad.Buttons.RB.Released += (_, _) => Screen.StopBoosting();
-
-gamepad.Buttons.RS.Pressed += (_, _) => Screen.Boost();
-gamepad.Buttons.RS.Released += (_, _) => Screen.StopBoosting();
-
 gamepad.Buttons.LB.Pressed += (_, _) => Screen.Boost();
 gamepad.Buttons.LB.Released += (_, _) => Screen.StopBoosting();
 
-gamepad.Buttons.LS.Pressed += (_, _) => Screen.Boost();
-gamepad.Buttons.LS.Released += (_, _) => Screen.StopBoosting();
+// The joystick buttons pressed simultaneosly trigger that the enter key is pressed.
+bool rsOrLsPressed = false;
+gamepad.Buttons.RS.Pressed += (_, _) =>
+{
+    if (rsOrLsPressed)
+    { Keyboard.PressKey(KeyboardVirtualKey.Enter); }
+    rsOrLsPressed = true;
+};
+gamepad.Buttons.RS.Released += (_, _) =>
+{
+    Keyboard.ReleaseKey(KeyboardVirtualKey.Enter);
+    rsOrLsPressed = false;
+};
+gamepad.Buttons.LS.Pressed += (_, _) =>
+{
+    if (rsOrLsPressed)
+    { Keyboard.PressKey(KeyboardVirtualKey.Enter); }
+    rsOrLsPressed = true;
+};
+gamepad.Buttons.LS.Released += (_, _) =>
+{
+    Keyboard.ReleaseKey(KeyboardVirtualKey.Enter);
+    rsOrLsPressed = false;
+};
+
 
 gamepad.Buttons.Y.Pressed += (_, _) =>
 {

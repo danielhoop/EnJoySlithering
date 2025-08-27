@@ -3,6 +3,11 @@ using ControllerToMouseMapper.Input;
 
 namespace EnJoySlithering.Slither;
 
+    public enum JoystickType {
+        LEFT,
+        RIGHT
+    }
+
 public class Screen
 {
     public double Radius { get; set; } = 65536 / 4;
@@ -11,6 +16,10 @@ public class Screen
     public double ScreenWidth { get; set; }
     public double ScreenHeight { get; set; }
     public double XAdaption;
+    private float XBeforeL = -1f;
+    private float YBeforeL = -1f;
+    private float XBeforeR = -1f;
+    private float YBeforeR = -1f;
 
     [StructLayout(LayoutKind.Sequential)]
     struct DEVMODE
@@ -75,10 +84,20 @@ public class Screen
         XAdaption = ScreenHeight / ScreenWidth;
     }
 
-    public void SetMousePositionFromJoystickValue(float x, float y)
+    public void SetMousePositionFromJoystickValue(float x, float y, JoystickType leftOrRight)
     {
-        if (x == 0 && y == 0)
-            return;
+        if (leftOrRight == JoystickType.LEFT) {
+            if (XBeforeL == 0f && YBeforeL == 0f && x == 0f && y == 0f)
+                return;
+            XBeforeL = x;
+            YBeforeL = y;
+        }
+        if (leftOrRight == JoystickType.RIGHT) {
+            if (XBeforeR == 0f && YBeforeR == 0f && x == 0f && y == 0f)
+                return;
+            XBeforeR = x;
+            YBeforeR = y;
+        }
         Mouse.SetPosition(
             XCenter + x * Radius * XAdaption,
             YCenter - y * Radius);
@@ -86,10 +105,10 @@ public class Screen
 
     public static void Boost() {
         Mouse.PressButton(MouseButton.Left);
-        Keyboard.PressKey(KeyboardVirtualKey.SpaceBar);
+        //Keyboard.PressKey(KeyboardVirtualKey.SpaceBar);
     }
     public static void StopBoosting() {
         Mouse.ReleaseButton(MouseButton.Left);
-        Keyboard.ReleaseKey(KeyboardVirtualKey.SpaceBar);
+        //Keyboard.ReleaseKey(KeyboardVirtualKey.SpaceBar);
     }
 }
