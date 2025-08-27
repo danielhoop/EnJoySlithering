@@ -1,9 +1,57 @@
-# ControllerToMouseMapper
+# EnJoySlithering - Use an XInput device to play slither.io on your Windows computer
 
-This repository provides a basic sample console application project that demonstrates how [XInputium](https://github.com/AderitoSilva/XInputium) can be used to emulate the mouse and keyboard.
+This repository contains the source code for a console application that will map your XInput device inputs to movements in slither.io.
 
-All XInputium related code is in the `Program.cs` file, and it showcases the main focus of XInputium, which is to make input related code as simple and straightforward as possible, abstracting input state management from the consumer.
+The name `EnJoySlithering` combines the words `enjoy`, `joystick` and `slithering`.
 
-The sample project also shows how one can implement a thread-safe input loop based on a precise timer. This might be useful in scneraios where you don't have a UI system that manages a loop for you, like in the case of a console application or a service. Although this precise timer implementation does its job, it is based on a spinner, so it is CPU intensive. A better alternative would be to use a native precise timer, like those provided by Windows media timers.
+The application is based on a basic sample console application project that demonstrates how [XInputium](https://github.com/AderitoSilva/XInputium) can be used to emulate the mouse and keyboard.
 
-`Program.cs` file has detailed comments that explain what each block does and why it does it. It also has a comment section that explains in more detail what is being done and why. You are encouraged to read that comment section to better undertsand, not just this particular application, but how to use XInputium in practice.
+```
+           /^\/^\
+         _|__|  O|
+  \/     /~     \_/ \
+   \____|__________/  \
+          \_______      \
+                  `\     \                 \
+                    |     |                  \
+                   /      /                    \
+                  /     /        En Joy         \
+                /      /      Slithering!        \ \
+               /     /                            \  \
+             /     /             _----_            \   \
+            /     /           _-~      ~-_         |   |
+           (      (        _-~    _--_    ~-_     _/   |
+            \      ~-____-~    _-~    ~-_    ~-_-~    /
+              ~-_           _-~          ~-_       _-~
+                 ~--______-~                ~-___-~
+
+------------------------------------------------------------
+------------------------- Controls -------------------------
+------------------------------------------------------------
+
+- Left joystick:  Move mouse
+- Right joystick: Move mouse
+- Buttons ABXRL:  Boost
+- Button Y:       Toggle circle mode
+  - D pad up:       Increase circle size
+                    The initial slither length to circle
+                    is set to 500. It can be increased
+                    by steps of 500 to 1000, 1500, 2000, etc.
+  - D pad down:     Decrease circle size
+  - D pad right:    Set circle direction clockwise
+  - D pad left:     Set circle direction counterclockwise
+- Start:          F11 (toggle full screen mode)
+- Back:
+  - 1x:           Turn right joystick off
+  - 2x:           Turn left joystick off
+  - 3x:           Turn both joysticks off
+  - 4x:           Turn both joysticks on
+
+------------------------------------------------------------
+Author:  Daniel Hoop
+         https://github.com/danielhoop
+Credits: Aderito Silva
+         https://github.com/AderitoSilva/XInputium
+Icon:    Snake icon created by Freepik - Flaticon
+------------------------------------------------------------
+```
