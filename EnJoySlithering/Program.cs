@@ -46,7 +46,8 @@ Console.WriteLine("------------------------------------------------------------"
 Console.WriteLine();
 Console.WriteLine("- Left joystick:  Move mouse");
 Console.WriteLine("- Right joystick: Move mouse");
-Console.WriteLine("- Buttons ABXRL:  Boost");
+Console.WriteLine("- Buttons ABRL:   Boost");
+Console.WriteLine("- Button X:       Toggle slither & rejoin mode");
 Console.WriteLine("- Button Y:       Toggle circle mode");
 Console.WriteLine("  - D pad up:       Increase circle size");
 Console.WriteLine("                    The initial slither length to circle");
@@ -89,6 +90,7 @@ deviceManager.DeviceStateChanged += (_, e) =>
 float deadZone = 0.2f; // 0.2f Was the original value. Is this the value for a circular deadzone? Probably not.
 Screen screen = new();
 PauseMoverCircle pauseMover = new(screen, gamepad);
+RejoinMover rejoinMover = new(screen, gamepad);
 JoystickSwitch jsControl = new();
 double leftTriggerLastValue = 0;
 double rightTriggerLastValue = 0;
@@ -100,7 +102,7 @@ joystickL.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make 
 // Map the joystick to the mouse.
 joystickL.Updated += (_, _) =>
 {
-    if (!pauseMover.IsPauseModeOn() && jsControl.IsLeftJoystickTurnedOn())
+    if (!pauseMover.IsPauseModeOn() && !rejoinMover.IsPauseModeOn() && jsControl.IsLeftJoystickTurnedOn())
     {
         screen.SetMousePositionFromJoystickValue(joystickL.X, joystickL.Y, JoystickType.LEFT);
     }
@@ -149,7 +151,7 @@ joystickR.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make 
 // Map the joystick to the mouse.
 joystickR.Updated += (_, _) =>
 {
-    if (!pauseMover.IsPauseModeOn() && jsControl.IsRightJoystickTurnedOn())
+    if (!pauseMover.IsPauseModeOn() && !rejoinMover.IsPauseModeOn() && jsControl.IsRightJoystickTurnedOn())
     {
         screen.SetMousePositionFromJoystickValue(joystickR.X, joystickR.Y, JoystickType.RIGHT);
     }
@@ -160,9 +162,6 @@ gamepad.Buttons.A.Released += (_, _) => Screen.StopBoosting();
 
 gamepad.Buttons.B.Pressed += (_, _) => Screen.Boost();
 gamepad.Buttons.B.Released += (_, _) => Screen.StopBoosting();
-
-gamepad.Buttons.X.Pressed += (_, _) => Screen.Boost();
-gamepad.Buttons.X.Released += (_, _) => Screen.StopBoosting();
 
 gamepad.Buttons.RB.Pressed += (_, _) => Screen.Boost();
 gamepad.Buttons.RB.Released += (_, _) => Screen.StopBoosting();
@@ -194,6 +193,18 @@ gamepad.Buttons.LS.Released += (_, _) =>
     rsOrLsPressed = false;
 };
 
+gamepad.Buttons.X.Pressed += (_, _) =>
+{
+    if (rejoinMover.IsPauseModeOn())
+    {
+        rejoinMover.StopPauseMode();
+    }
+    else if (!pauseMover.IsPauseModeOn())
+    {
+        rejoinMover.StartPauseMode();
+    }
+};
+
 
 gamepad.Buttons.Y.Pressed += (_, _) =>
 {
@@ -201,7 +212,7 @@ gamepad.Buttons.Y.Pressed += (_, _) =>
     {
         pauseMover.StopPauseMode();
     }
-    else
+    else if (!rejoinMover.IsPauseModeOn())
     {
         pauseMover.StartPauseMode();
     }
@@ -247,6 +258,7 @@ using InputLoop inputLoop = new(time =>
 
     // Call the pause mode mover method to adapt the mouse position: circling
     pauseMover.AdaptMousePosition();
+    rejoinMover.AdaptMousePosition();
 
     // The frequency of the input loop is 60 iterations per second
     // Attention: If you change this, the behaviour of the pauseMover may change,

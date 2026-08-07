@@ -31,7 +31,8 @@ The application is based on a basic sample console application project that demo
 
 - Left joystick:  Move mouse
 - Right joystick: Move mouse
-- Buttons ABXRL:  Boost
+- Buttons ABRL:   Boost
+- Button X:       Toggle slither & rejoin mode
 - Button Y:       Toggle circle mode
   - D pad up:       Increase circle size
                     The initial slither length to circle
