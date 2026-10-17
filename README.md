@@ -33,6 +33,10 @@ The application is based on a basic sample console application project that demo
 - Right joystick: Move mouse
 - Buttons ABRL:   Boost
 - Button X:       Toggle slither & rejoin mode
+  - Ctrl + Up/Down (on the keyboard):
+                  Adjust slither & rejoin circle size
+  - Ctrl + X (on the keyboard):
+                  Toggle slither & rejoin mode.
 - Button Y:       Toggle circle mode
   - D pad up:       Increase circle size
                     The initial slither length to circle
@@ -47,6 +51,7 @@ The application is based on a basic sample console application project that demo
   - 2x:           Turn left joystick off
   - 3x:           Turn both joysticks off
   - 4x:           Turn both joysticks on
+- Press Ctrl + Q to close the application.
 
 ------------------------------------------------------------
 Author:  Daniel Hoop

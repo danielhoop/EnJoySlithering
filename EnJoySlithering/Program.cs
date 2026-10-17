@@ -8,6 +8,7 @@ using XInputium.XInput;
 using EnJoySlithering.Slither;
 using System.Configuration;
 
+
 // For this sample project, we are using our own simple implementation of mouse and
 // keyboard interop. But for more complete and capable keyboard and mouse simulation
 // features, check out: https://github.com/MediatedCommunications/WindowsInput/
@@ -48,6 +49,10 @@ Console.WriteLine("- Left joystick:  Move mouse");
 Console.WriteLine("- Right joystick: Move mouse");
 Console.WriteLine("- Buttons ABRL:   Boost");
 Console.WriteLine("- Button X:       Toggle slither & rejoin mode");
+Console.WriteLine("  - Ctrl + Up/Down (on the keyboard):");
+Console.WriteLine("                  Adjust slither & rejoin circle size");
+Console.WriteLine("  - Ctrl + X (on the keyboard):");
+Console.WriteLine("                  Toggle slither & rejoin mode.");
 Console.WriteLine("- Button Y:       Toggle circle mode");
 Console.WriteLine("  - D pad up:       Increase circle size");
 Console.WriteLine("                    The initial slither length to circle");
@@ -62,6 +67,7 @@ Console.WriteLine("  - 1x:           Turn right joystick off");
 Console.WriteLine("  - 2x:           Turn left joystick off");
 Console.WriteLine("  - 3x:           Turn both joysticks off");
 Console.WriteLine("  - 4x:           Turn both joysticks on");
+Console.WriteLine("- Press Ctrl + Q to close the application.");
 Console.WriteLine();
 Console.WriteLine("------------------------------------------------------------");
 Console.WriteLine("Author:  Daniel Hoop");
@@ -103,9 +109,7 @@ joystickL.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make 
 joystickL.Updated += (_, _) =>
 {
     if (!pauseMover.IsPauseModeOn() && !rejoinMover.IsPauseModeOn() && jsControl.IsLeftJoystickTurnedOn())
-    {
         screen.SetMousePositionFromJoystickValue(joystickL.X, joystickL.Y, JoystickType.LEFT);
-    }
 
     // Boost using the triggers (left)
     if (gamepad.LeftTrigger.RawValue == 1)
@@ -152,9 +156,7 @@ joystickR.RadiusModifierFunction = NonLinearFunctions.QuadraticEaseIn;  // Make 
 joystickR.Updated += (_, _) =>
 {
     if (!pauseMover.IsPauseModeOn() && !rejoinMover.IsPauseModeOn() && jsControl.IsRightJoystickTurnedOn())
-    {
         screen.SetMousePositionFromJoystickValue(joystickR.X, joystickR.Y, JoystickType.RIGHT);
-    }
 };
 
 gamepad.Buttons.A.Pressed += (_, _) => Screen.Boost();
@@ -172,8 +174,7 @@ gamepad.Buttons.LB.Released += (_, _) => Screen.StopBoosting();
 bool rsOrLsPressed = false;
 gamepad.Buttons.RS.Pressed += (_, _) =>
 {
-    if (rsOrLsPressed)
-    { Keyboard.PressKey(KeyboardVirtualKey.Enter); }
+    if (rsOrLsPressed) Keyboard.PressKey(KeyboardVirtualKey.Enter);
     rsOrLsPressed = true;
 };
 gamepad.Buttons.RS.Released += (_, _) =>
@@ -183,8 +184,7 @@ gamepad.Buttons.RS.Released += (_, _) =>
 };
 gamepad.Buttons.LS.Pressed += (_, _) =>
 {
-    if (rsOrLsPressed)
-    { Keyboard.PressKey(KeyboardVirtualKey.Enter); }
+    if (rsOrLsPressed) Keyboard.PressKey(KeyboardVirtualKey.Enter);
     rsOrLsPressed = true;
 };
 gamepad.Buttons.LS.Released += (_, _) =>
@@ -195,27 +195,15 @@ gamepad.Buttons.LS.Released += (_, _) =>
 
 gamepad.Buttons.X.Pressed += (_, _) =>
 {
-    if (rejoinMover.IsPauseModeOn())
-    {
-        rejoinMover.StopPauseMode();
-    }
-    else if (!pauseMover.IsPauseModeOn())
-    {
-        rejoinMover.StartPauseMode();
-    }
+    if (rejoinMover.IsPauseModeOn()) rejoinMover.StopPauseMode();
+    else if (!pauseMover.IsPauseModeOn()) rejoinMover.StartPauseMode();
 };
 
 
 gamepad.Buttons.Y.Pressed += (_, _) =>
 {
-    if (pauseMover.IsPauseModeOn())
-    {
-        pauseMover.StopPauseMode();
-    }
-    else if (!rejoinMover.IsPauseModeOn())
-    {
-        pauseMover.StartPauseMode();
-    }
+    if (pauseMover.IsPauseModeOn()) pauseMover.StopPauseMode();
+    else if (!rejoinMover.IsPauseModeOn()) pauseMover.StartPauseMode();
 };
 
 
@@ -240,6 +228,10 @@ gamepad.RegisterButtonRepeatEvent(gamepad.Buttons.B, buttonRepeatDelay, buttonRe
 */
 
 // # START LISTENING FOR INPUT
+bool upWasDown = false;
+bool downWasDown = false;
+bool qWasDown = false;
+bool xWasDown = false;
 
 // Start the input loop. Note that, from now on, any changes you may want to make to
 // the gamepad must always be done within the input loop update callback, to ensure
@@ -256,6 +248,38 @@ using InputLoop inputLoop = new(time =>
     // a device from the device manager.
     deviceManager.Update();  // All input events will fire here.
 
+    // Adjust the rejoin circle once per key press, even when a key is held.
+    bool controlDown = (NativeKeyboard.GetAsyncKeyState(0x11) & 0x8000) != 0;
+    bool upDown = (NativeKeyboard.GetAsyncKeyState(0x26) & 0x8000) != 0;
+    bool downDown = (NativeKeyboard.GetAsyncKeyState(0x28) & 0x8000) != 0;
+    bool qDown = (NativeKeyboard.GetAsyncKeyState(0x51) & 0x8000) != 0;
+    bool xDown = (NativeKeyboard.GetAsyncKeyState(0x58) & 0x8000) != 0;
+    bool upPressed = upDown && !upWasDown;
+    bool downPressed = downDown && !downWasDown;
+    bool qPressed = qDown && !qWasDown;
+    bool xPressed = xDown && !xWasDown;
+
+    if (controlDown && qPressed)
+        Environment.Exit(0);
+
+    if (controlDown && xPressed)
+    {
+        if (rejoinMover.IsPauseModeOn()) rejoinMover.StopPauseMode();
+        else if (!pauseMover.IsPauseModeOn()) rejoinMover.StartPauseMode();
+    }
+
+    if (controlDown && (upPressed || downPressed))
+    {
+        float factor = rejoinMover.AdjustCircleFactor(upPressed ? 1 : -1);
+        if (!pauseMover.IsPauseModeOn() && !rejoinMover.IsPauseModeOn())
+            rejoinMover.PreviewCircleSize();
+        Console.WriteLine($"Slither & rejoin circle size: {factor:0.000}");
+    }
+    upWasDown = upDown;
+    downWasDown = downDown;
+    qWasDown = qDown;
+    xWasDown = xDown;
+
     // Call the pause mode mover method to adapt the mouse position: circling
     pauseMover.AdaptMousePosition();
     rejoinMover.AdaptMousePosition();
@@ -266,14 +290,26 @@ using InputLoop inputLoop = new(time =>
 }, 60);
 inputLoop.Start();  // Start our input loop, to listen for input events.
 
+Console.WriteLine("\n------------------------------------------------------------");
+Console.WriteLine("Type \"exit\" and press enter to close the application.");
+Console.WriteLine("Type \"x\" and press enter to toggle slither & rejoin mode (if you have no controller).");
+Console.WriteLine("------------------------------------------------------------\n");
+
+// Keep the console app alive and handle simple console commands.
+while (true)
+{
+    string? command = Console.ReadLine();
+    if (string.Equals(command, "exit", StringComparison.OrdinalIgnoreCase))
+        break;
+
+    if (string.Equals(command, "x", StringComparison.OrdinalIgnoreCase))
+    {
+        if (rejoinMover.IsPauseModeOn()) rejoinMover.StopPauseMode();
+        else if (!pauseMover.IsPauseModeOn()) rejoinMover.StartPauseMode();
+    }
+}
 
 // =====================================
-
-// Wait for the user to press any key on the console, so the console remains open.
-Console.WriteLine();
-Console.WriteLine("Press any key to terminate the application.");
-Console.ReadKey();
-
 
 // -------------------------------------
 // HOW THIS APPLICATION WORKS
@@ -414,4 +450,10 @@ Console.ReadKey();
  * own. Our little app uses just the ones it needs, but feel free to use other
  * ones if you'd like.
  */
+
+static class NativeKeyboard
+{
+    [DllImport("user32.dll")]
+    internal static extern short GetAsyncKeyState(int virtualKey);
+}
 

@@ -8,7 +8,10 @@ public class RejoinMover
     private readonly Screen Screen;
     private bool PauseModeOn = false;
     private readonly double MsMaxBeforeNextStep = 20;
-    private const float CircleFactor = 0.6f;
+    private const float MinCircleFactor = 0.025f;
+    private const float MaxCircleFactor = 1f;
+    private const float CircleFactorStep = 0.025f;
+    private float CircleFactor = 0.6f;
     private const float TopCrossingRatio = 0.95f;
     private const double StartAngleOffset = 0.1;
     private static readonly TimeSpan BoostPressLength = TimeSpan.FromMilliseconds(100);
@@ -40,6 +43,20 @@ public class RejoinMover
     public bool IsPauseModeOn()
     {
         return PauseModeOn;
+    }
+
+    public float AdjustCircleFactor(int direction)
+    {
+        CircleFactor = Math.Clamp(CircleFactor + direction * CircleFactorStep, MinCircleFactor, MaxCircleFactor);
+        return CircleFactor;
+    }
+
+    public void PreviewCircleSize()
+    {
+        if (PauseModeOn)
+            return;
+
+        Screen.SetMousePositionFromJoystickValue(0f, CircleFactor, JoystickType.LEFT);
     }
 
     public void StopPauseMode()
